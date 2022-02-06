@@ -29,6 +29,7 @@ func Execute() {
 func init() {
 	rootCmd.PersistentFlags().BoolP("branch", "b", false, "When set the branch will be included in the version.")
 	rootCmd.PersistentFlags().BoolP("increment", "i", false, "When set the incremented version is returned.")
+	rootCmd.PersistentFlags().BoolP("full", "f", false, "When set the full semver version is returned. IE v1.2.0 instead of v1.2 for a minor version.")
 	rootCmd.PersistentFlags().BoolP("revision", "r", false, "When set the revision will be included in the version.")
 	rootCmd.PersistentFlags().BoolP("semver", "s", false, "When set the semver will be included in the version regardless of whether the version is for the master branch.")
 	rootCmd.PersistentFlags().StringP("master", "m", "master", "Overrides the \"master\" branch of the repo.")
@@ -58,6 +59,13 @@ func buildVersion(cmd *cobra.Command, args []string) (*version.Version, error) {
 
 	}
 	vopts.SetBranch(br)
+
+	f, err := cmd.Flags().GetBool("full")
+	if err != nil {
+		return nil, fmt.Errorf("invalid full: %w", err)
+
+	}
+	vopts.SetFull(f)
 
 	rev, err := cmd.Flags().GetBool("revision")
 	if err != nil {

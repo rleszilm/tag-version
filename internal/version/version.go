@@ -74,6 +74,7 @@ type Versioner interface {
 // VersionOption defines the options that can be passed in.
 type VersionOption struct {
 	Branch   *bool
+	Full     *bool
 	Master   *string
 	Revision *bool
 	Semver   *bool
@@ -82,6 +83,11 @@ type VersionOption struct {
 // SetBranch sets the WithBranch flag.
 func (v *VersionOption) SetBranch(b bool) {
 	v.Branch = &b
+}
+
+// SetFull sets the WithFull flag.
+func (v *VersionOption) SetFull(b bool) {
+	v.Full = &b
 }
 
 // SetMaster sets the WithMaster flag.
@@ -133,6 +139,9 @@ func options(vos ...*VersionOption) *VersionOption {
 		if vo.Branch != nil {
 			opts.Branch = vo.Branch
 		}
+		if vo.Full != nil {
+			opts.Full = vo.Full
+		}
 		if vo.Master != nil {
 			opts.Master = vo.Master
 		}
@@ -162,6 +171,9 @@ type Version struct {
 func (v *Version) Major() (string, error) {
 	args := v.args()
 	args["Objective"] = "major"
+	if v.options.Full != nil && *v.options.Full {
+		args["Objective"] = "patch"
+	}
 
 	buf := &bytes.Buffer{}
 	err := v.tmpl.Execute(buf, args)
@@ -176,6 +188,9 @@ func (v *Version) Major() (string, error) {
 func (v *Version) Minor() (string, error) {
 	args := v.args()
 	args["Objective"] = "minor"
+	if v.options.Full != nil && *v.options.Full {
+		args["Objective"] = "patch"
+	}
 
 	buf := &bytes.Buffer{}
 	err := v.tmpl.Execute(buf, args)

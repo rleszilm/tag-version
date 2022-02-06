@@ -52,10 +52,11 @@ func TestMajor(t *testing.T) {
 			tag:        "v1.2.3",
 			opts: []*version.VersionOption{
 				{Branch: refBool(true)},
+				{Full: refBool(true)},
 				{Revision: refBool(true)},
 				{Semver: refBool(true)},
 			},
-			expect: "v1-master+d28fbce",
+			expect: "v1.2.3-master+d28fbce",
 		},
 		{
 			desc:       "all options - non master branch",
@@ -65,11 +66,12 @@ func TestMajor(t *testing.T) {
 			tag:        "v1.2.3",
 			opts: []*version.VersionOption{
 				{Branch: refBool(true)},
+				{Full: refBool(true)},
 				{Master: refString("main")},
 				{Revision: refBool(true)},
 				{Semver: refBool(true)},
 			},
-			expect: "v1-master+d28fbce",
+			expect: "v1.2.3-master+d28fbce",
 		},
 	}
 
