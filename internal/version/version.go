@@ -237,11 +237,14 @@ func (v *Version) Patch() (string, error) {
 // IncMajor increments the major version.
 func (v *Version) IncMajor() {
 	v.major++
+	v.minor = 0
+	v.patch = 0
 }
 
 // IncMinor increments the Minor version.
 func (v *Version) IncMinor() {
 	v.minor++
+	v.patch = 0
 }
 
 // IncPatch increments the Patch version.
