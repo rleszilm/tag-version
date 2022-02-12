@@ -42,7 +42,12 @@ const (
 {{- end -}}
 
 {{- if .Options.Revision -}}
-	+{{- .Committish -}}
+	{{- if .Options.Docker -}}
+		-
+	{{- else -}}
+		+
+	{{- end -}}
+	{{- .Committish -}}
 {{- end -}}
 `
 )
@@ -74,6 +79,7 @@ type Versioner interface {
 // VersionOption defines the options that can be passed in.
 type VersionOption struct {
 	Branch   *bool
+	Docker   *bool
 	Full     *bool
 	Master   *string
 	Revision *bool
@@ -83,6 +89,11 @@ type VersionOption struct {
 // SetBranch sets the WithBranch flag.
 func (v *VersionOption) SetBranch(b bool) {
 	v.Branch = &b
+}
+
+// SetDocker sets the WithDocker flag.
+func (v *VersionOption) SetDocker(b bool) {
+	v.Docker = &b
 }
 
 // SetFull sets the WithFull flag.
@@ -113,6 +124,10 @@ func (v *VersionOption) Map() map[string]interface{} {
 		m["Branch"] = *v.Branch
 	}
 
+	if v.Docker != nil {
+		m["Docker"] = *v.Docker
+	}
+
 	if v.Master != nil {
 		m["Master"] = *v.Master
 	}
@@ -131,6 +146,7 @@ func (v *VersionOption) Map() map[string]interface{} {
 func options(vos ...*VersionOption) *VersionOption {
 	opts := &VersionOption{}
 	opts.SetBranch(false)
+	opts.SetDocker(false)
 	opts.SetMaster(defaultMaster)
 	opts.SetRevision(false)
 	opts.SetSemver(false)
@@ -138,6 +154,9 @@ func options(vos ...*VersionOption) *VersionOption {
 	for _, vo := range vos {
 		if vo.Branch != nil {
 			opts.Branch = vo.Branch
+		}
+		if vo.Docker != nil {
+			opts.Docker = vo.Docker
 		}
 		if vo.Full != nil {
 			opts.Full = vo.Full

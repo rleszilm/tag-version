@@ -59,6 +59,21 @@ func TestMajor(t *testing.T) {
 			expect: "v1.2.3-master+d28fbce",
 		},
 		{
+			desc:       "all options - docker",
+			branch:     "master",
+			commit:     "d28fbcea1e82ef9bd117fa07a7664032df8437b1",
+			committish: "d28fbce",
+			tag:        "v1.2.3",
+			opts: []*version.VersionOption{
+				{Branch: refBool(true)},
+				{Docker: refBool(true)},
+				{Full: refBool(true)},
+				{Revision: refBool(true)},
+				{Semver: refBool(true)},
+			},
+			expect: "v1.2.3-master-d28fbce",
+		},
+		{
 			desc:       "all options - non master branch",
 			branch:     "master",
 			commit:     "d28fbcea1e82ef9bd117fa07a7664032df8437b1",
@@ -72,6 +87,22 @@ func TestMajor(t *testing.T) {
 				{Semver: refBool(true)},
 			},
 			expect: "v1.2.3-master+d28fbce",
+		},
+		{
+			desc:       "all options - non master branch - docker",
+			branch:     "master",
+			commit:     "d28fbcea1e82ef9bd117fa07a7664032df8437b1",
+			committish: "d28fbce",
+			tag:        "v1.2.3",
+			opts: []*version.VersionOption{
+				{Branch: refBool(true)},
+				{Docker: refBool(true)},
+				{Full: refBool(true)},
+				{Master: refString("main")},
+				{Revision: refBool(true)},
+				{Semver: refBool(true)},
+			},
+			expect: "v1.2.3-master-d28fbce",
 		},
 	}
 
