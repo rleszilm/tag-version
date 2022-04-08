@@ -2,6 +2,7 @@ package version
 
 import (
 	"bytes"
+	"fmt"
 	"text/template"
 
 	"github.com/blang/semver"
@@ -289,6 +290,9 @@ func NewVersion(ver Versioner, vos ...*VersionOption) (*Version, error) {
 	branches, err := ver.Branches()
 	if err != nil {
 		return nil, err
+	}
+	if len(branches) != 1 {
+		return nil, fmt.Errorf("multiple branches detected in detached state: %v", branches)
 	}
 	branch := branches[0]
 

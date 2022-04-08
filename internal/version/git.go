@@ -30,7 +30,11 @@ func (g *Git) Branches() ([]string, error) {
 		return nil, err
 	}
 
-	refs, err := g.repo.Storer.IterReferences()
+	if h.Name() != plumbing.HEAD {
+		return []string{h.Name().Short()}, nil
+	}
+
+	refs, err := g.repo.Branches()
 	if err != nil {
 		return nil, err
 	}
@@ -59,6 +63,7 @@ func (g *Git) Branches() ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return branches, nil
 }
 
