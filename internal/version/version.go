@@ -70,7 +70,7 @@ func init() {
 // Versioner is an interface that caontains data about the version of a resource.
 //go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 . Versioner
 type Versioner interface {
-	Branch() (string, error)
+	Branches() ([]string, error)
 	Commit() (string, error)
 	Committish() (string, error)
 	Tag() (string, error)
@@ -286,10 +286,11 @@ func NewVersion(ver Versioner, vos ...*VersionOption) (*Version, error) {
 		return nil, err
 	}
 
-	branch, err := ver.Branch()
+	branches, err := ver.Branches()
 	if err != nil {
 		return nil, err
 	}
+	branch := branches[0]
 
 	committish, err := ver.Committish()
 	if err != nil {
