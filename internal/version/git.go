@@ -3,9 +3,18 @@ package version
 import (
 	"errors"
 	"io"
+	"regexp"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+)
+
+const (
+	gitBranchMatchPattern = `^refs\/heads\/(?P<branch>[\S]*)$`
+)
+
+var (
+	gitBranchMatch = regexp.MustCompile(gitBranchMatchPattern)
 )
 
 // Git is a struct that interacts with a git repo.
@@ -14,13 +23,43 @@ type Git struct {
 	tags map[plumbing.Hash]*plumbing.Reference
 }
 
-// Branch returns the current branch.
-func (g *Git) Branch() (string, error) {
+// Branches returns the current branch.
+func (g *Git) Branches() ([]string, error) {
 	h, err := g.repo.Head()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return h.Name().Short(), nil
+
+	refs, err := g.repo.Storer.IterReferences()
+	if err != nil {
+		return nil, err
+	}
+
+	branches := []string{}
+	refs.ForEach(func(ref *plumbing.Reference) error {
+		if ref.Hash() == h.Hash() {
+			if !ref.Name().IsBranch() {
+				return nil
+			}
+
+			matches := gitBranchMatch.FindAllStringSubmatch(ref.Name().String(), -1)
+			if matches != nil {
+				for _, match := range matches {
+					for i, name := range gitBranchMatch.SubexpNames() {
+						if name == "branch" {
+							branches = append(branches, match[i])
+						}
+					}
+				}
+			}
+		}
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+	return branches, nil
 }
 
 // Commit returns the commit of the HEAD.
