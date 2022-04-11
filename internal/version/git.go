@@ -3,10 +3,12 @@ package version
 import (
 	"errors"
 	"io"
+	"log"
 	"regexp"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 const (
@@ -19,8 +21,30 @@ var (
 
 // Git is a struct that interacts with a git repo.
 type Git struct {
-	repo *git.Repository
-	tags map[plumbing.Hash]*plumbing.Reference
+	repo     *git.Repository
+	branches map[plumbing.Hash][]*plumbing.Reference
+	tags     map[plumbing.Hash]*plumbing.Reference
+}
+
+func (g *Git) mostRecentBranchReference() (*plumbing.Reference, error) {
+	ref, err := g.repo.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	com, err := g.repo.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, err
+	}
+
+	ci := object.NewCommitPreorderIter(com, nil, nil)
+	for {
+		com, err := ci.Next()
+		if err != nil {
+			return nil, err
+		}
+		log.Println(com.Hash)
+	}
 }
 
 // Branches returns the current branch.
@@ -34,34 +58,18 @@ func (g *Git) Branches() ([]string, error) {
 		return []string{h.Name().Short()}, nil
 	}
 
-	refs, err := g.repo.Branches()
-	if err != nil {
-		return nil, err
-	}
-
 	branches := []string{}
-	refs.ForEach(func(ref *plumbing.Reference) error {
-		if ref.Hash() == h.Hash() {
-			if !ref.Name().IsBranch() {
-				return nil
-			}
-
-			matches := gitBranchMatch.FindAllStringSubmatch(ref.Name().String(), -1)
-			if matches != nil {
-				for _, match := range matches {
-					for i, name := range gitBranchMatch.SubexpNames() {
-						if name == "branch" {
-							branches = append(branches, match[i])
-						}
+	for _, ref := range g.branches[h.Hash()] {
+		matches := gitBranchMatch.FindAllStringSubmatch(ref.Name().String(), -1)
+		if matches != nil {
+			for _, match := range matches {
+				for i, name := range gitBranchMatch.SubexpNames() {
+					if name == "branch" {
+						branches = append(branches, match[i])
 					}
 				}
 			}
 		}
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return branches, nil
@@ -127,6 +135,20 @@ func NewGit(path string) (*Git, error) {
 		return nil, err
 	}
 
+	branches := map[plumbing.Hash][]*plumbing.Reference{}
+	bi, err := repo.Branches()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := bi.ForEach(func(r *plumbing.Reference) error {
+		brs := branches[r.Hash()]
+		branches[r.Hash()] = append(brs, r)
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
 	tags := map[plumbing.Hash]*plumbing.Reference{}
 	ti, err := repo.Tags()
 	if err != nil {
@@ -141,7 +163,8 @@ func NewGit(path string) (*Git, error) {
 	}
 
 	return &Git{
-		repo: repo,
-		tags: tags,
+		repo:     repo,
+		branches: branches,
+		tags:     tags,
 	}, nil
 }
